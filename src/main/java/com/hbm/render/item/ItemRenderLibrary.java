@@ -423,16 +423,14 @@ public class ItemRenderLibrary {
 			}});
 		renderers.put(Item.getItemFromBlock(ModBlocks.heater_heatex), new ItemRenderBase() {
 			public void renderInventory() {
-//				GL11.glTranslated(0, -1, 0);
+				GL11.glTranslated(0, -1, 0);
 				GL11.glScaled(1.9, 1.9, 1.9);
-				GL11.glRotated(90, 0, 1, 0);
 			}
 			public void renderCommon() {
-//				GL11.glRotated(180, 0, 1, 0);
-//				GL11.glScaled(1.9, 1.9, 1.9);
+				GL11.glRotated(180, 0, 1, 0);
+				GL11.glScaled(1.9, 1.9, 1.9);
 				GlStateManager.shadeModel(GL11.GL_SMOOTH);
-				bindTexture(ResourceManager.heater_heatex_tex);
-				ResourceManager.heater_heatex.renderAll();
+				bindTexture(ResourceManager.heater_heatex_tex);  ResourceManager.heater_heatex.renderAll();
 				GlStateManager.shadeModel(GL11.GL_FLAT);
 			}});
 		renderers.put(Item.getItemFromBlock(ModBlocks.heater_firebox), new ItemRenderBase() {
