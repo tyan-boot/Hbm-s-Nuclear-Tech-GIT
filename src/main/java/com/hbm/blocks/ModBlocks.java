@@ -1181,6 +1181,7 @@ public class ModBlocks {
 	
 	//Heat-Based Machines
 	public static final Block heater_firebox = new HeaterFirebox(Material.IRON, "heater_firebox").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.machineTab);
+	public static final Block heater_heatex = new HeaterHeatex(Material.IRON, "heater_heatex").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.machineTab);
 	public static final Block furnace_steel = new FurnaceSteel(Material.IRON, "furnace_steel").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.machineTab);
 
 	//Misc
