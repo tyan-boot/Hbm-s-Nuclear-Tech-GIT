@@ -21,9 +21,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class GUIHeaterHeatex extends GuiInfoContainer {
-
-    private static ResourceLocation texture = new ResourceLocation(RefStrings.MODID + ":textures/gui/machine/gui_heatex.png");
-    private TileEntityHeaterHeatex heater;
+    private final static ResourceLocation texture = new ResourceLocation(RefStrings.MODID + ":textures/gui/machine/gui_heatex.png");
+    private final TileEntityHeaterHeatex heater;
     private GuiTextField fieldCycles;
     private GuiTextField fieldDelay;
 
@@ -69,6 +68,8 @@ public class GUIHeaterHeatex extends GuiInfoContainer {
         if (guiLeft + 70 <= x && guiLeft + 70 + 36 > x && guiTop + 44 < y && guiTop + 44 + 18 >= y) {
             drawHoveringText(Arrays.asList("Cycle tick delay"), x, y);
         }
+
+        super.renderHoveredToolTip(x, y);
     }
 
     @Override
