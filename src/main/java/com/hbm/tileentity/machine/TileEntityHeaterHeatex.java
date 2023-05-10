@@ -1,6 +1,7 @@
 package com.hbm.tileentity.machine;
 
 import api.hbm.tile.IHeatSource;
+import com.hbm.blocks.BlockDummyable;
 import com.hbm.forgefluid.FFUtils;
 import com.hbm.forgefluid.ModForgeFluids;
 import com.hbm.interfaces.IControlReceiver;
@@ -10,6 +11,10 @@ import com.hbm.inventory.container.ContainerHeaterHeatex;
 import com.hbm.inventory.gui.GUIHeaterHeatex;
 import com.hbm.items.ModItems;
 import com.hbm.items.machine.ItemForgeFluidIdentifier;
+import com.hbm.lib.ForgeDirection;
+import com.hbm.packet.FluidTankPacket;
+import com.hbm.packet.FluidTypePacketTest;
+import com.hbm.packet.PacketDispatcher;
 import com.hbm.tileentity.IGUIProvider;
 import com.hbm.tileentity.INBTPacketReceiver;
 import com.hbm.tileentity.TileEntityMachineBase;
@@ -29,6 +34,7 @@ import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -80,49 +86,44 @@ public class TileEntityHeaterHeatex extends TileEntityMachineBase implements IHe
 
             this.setupTanks();
 
+            PacketDispatcher.wrapper.sendToAllAround(new FluidTankPacket(pos.getX(), pos.getY(), pos.getZ(), new FluidTank[]{tanks[0], tanks[1]}), new NetworkRegistry.TargetPoint(world.provider.getDimension(), pos.getX(), pos.getY(), pos.getZ(), 10));
+            PacketDispatcher.wrapper.sendToAllAround(new FluidTypePacketTest(pos.getX(), pos.getY(), pos.getZ(), tankTypes), new NetworkRegistry.TargetPoint(world.provider.getDimension(), pos.getX(), pos.getY(), pos.getZ(), 10));
+
             this.heatEnergy *= 0.999;
-
-            NBTTagCompound data = new NBTTagCompound();
-
-            NBTTagCompound inData = new NBTTagCompound();
-            tanks[0].writeToNBT(inData);
-            data.setTag("in", inData);
 
             this.tryConvert();
 
-            NBTTagCompound outData = new NBTTagCompound();
-            tanks[1].writeToNBT(outData);
-            data.setTag("out", outData);
-
+            NBTTagCompound data = new NBTTagCompound();
             data.setInteger("heat", heatEnergy);
             data.setInteger("toCool", amountToCool);
             data.setInteger("delay", tickDelay);
+            data.setTag("tanks", FFUtils.serializeTankArray(tanks));
             INBTPacketReceiver.networkPack(this, data, 25);
 
             fillFluidInit(tanks[1]);
+            markDirty();
         }
     }
 
     public void fillFluidInit(FluidTank tank) {
-        FFUtils.fillFluid(this, tank, world, pos.east(), 12000);
-        FFUtils.fillFluid(this, tank, world, pos.west(), 12000);
-        FFUtils.fillFluid(this, tank, world, pos.up(), 12000);
-        FFUtils.fillFluid(this, tank, world, pos.down(), 12000);
-        FFUtils.fillFluid(this, tank, world, pos.south(), 12000);
-        FFUtils.fillFluid(this, tank, world, pos.north(), 12000);
+        ForgeDirection dir = ForgeDirection.getOrientation(this.getBlockMetadata() - BlockDummyable.offset);
+        ForgeDirection rot = dir.getRotation(ForgeDirection.UP);
+
+        FFUtils.fillFluid(this, tank, world, pos.add(dir.offsetX * 2 + rot.offsetX, 0, dir.offsetZ * 2 + rot.offsetZ), 12000);
+        FFUtils.fillFluid(this, tank, world, pos.add(dir.offsetX * 2 - rot.offsetX, 0, dir.offsetZ * 2 - rot.offsetZ), 12000);
+        FFUtils.fillFluid(this, tank, world, pos.add(-dir.offsetX * 2 + rot.offsetX, 0, -dir.offsetZ * 2 + rot.offsetZ), 12000);
+        FFUtils.fillFluid(this, tank, world, pos.add(-dir.offsetX * 2 - rot.offsetX, 0, -dir.offsetZ * 2 - rot.offsetZ), 12000);
     }
 
     @Override
     public void networkUnpack(NBTTagCompound nbt) {
-        NBTTagCompound in = nbt.getCompoundTag("in");
-        tanks[0].readFromNBT(in);
-
-        NBTTagCompound out = nbt.getCompoundTag("out");
-        tanks[1].readFromNBT(out);
-
         this.heatEnergy = nbt.getInteger("heatEnergy");
         this.amountToCool = nbt.getInteger("toCool");
         this.tickDelay = nbt.getInteger("delay");
+
+        if (nbt.hasKey("tanks")) {
+            FFUtils.deserializeTankArray(nbt.getTagList("tanks", 10), tanks);
+        }
     }
 
     protected void setupTanks() {
@@ -163,8 +164,6 @@ public class TileEntityHeaterHeatex extends TileEntityMachineBase implements IHe
         tanks[1].fill(new FluidStack(tankTypes[1], ops * amountProduced), true);
 
         this.heatEnergy += heat * ops * 0.5D;
-
-        world.getChunkFromBlockCoords(this.pos).markDirty();
     }
 
     @Override
@@ -203,7 +202,7 @@ public class TileEntityHeaterHeatex extends TileEntityMachineBase implements IHe
 
     @Override
     public void recievePacket(NBTTagCompound[] tags) {
-        if(tags.length != 2) {
+        if (tags.length != 2) {
             return;
         } else {
             tanks[0].readFromNBT(tags[0]);
@@ -211,33 +210,62 @@ public class TileEntityHeaterHeatex extends TileEntityMachineBase implements IHe
         }
     }
 
-
     @Override
     public IFluidTankProperties[] getTankProperties() {
-        return new IFluidTankProperties[] { tanks[0].getTankProperties()[0], tanks[1].getTankProperties()[0] };
+        return new IFluidTankProperties[]{tanks[0].getTankProperties()[0], tanks[1].getTankProperties()[0]};
     }
 
     @Override
     public int fill(FluidStack resource, boolean doFill) {
-        return tanks[0].fill(resource, doFill);
+        if (resource != null && resource.getFluid() == tankTypes[0] && resource.amount > 0) {
+            return tanks[0].fill(resource, doFill);
+        }
+
+        return 0;
     }
 
     @Nullable
     @Override
     public FluidStack drain(FluidStack resource, boolean doDrain) {
-        return tanks[1].drain(resource, doDrain);
+        if (resource != null && resource.getFluid() == tankTypes[1] && resource.amount > 0) {
+            return tanks[1].drain(resource, doDrain);
+        } else {
+            return null;
+        }
     }
 
     @Nullable
     @Override
     public FluidStack drain(int maxDrain, boolean doDrain) {
-        return tanks[1].drain(maxDrain, doDrain);
+        if (maxDrain > 0) {
+            return tanks[1].drain(maxDrain, doDrain);
+        } else {
+            return null;
+        }
     }
-
 
     @Override
     public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-        return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+            ForgeDirection dir = ForgeDirection.getOrientation(this.getBlockMetadata() - BlockDummyable.offset);
+            if (facing == dir.toEnumFacing().getOpposite() || facing == dir.toEnumFacing() || facing == null) {
+                return true;
+            }
+        }
+
+        return super.hasCapability(capability, facing);
+    }
+
+    @Override
+    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+            ForgeDirection dir = ForgeDirection.getOrientation(this.getBlockMetadata() - BlockDummyable.offset);
+            if (facing == dir.toEnumFacing().getOpposite() || facing == dir.toEnumFacing() || facing == null) {
+                return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(this);
+            }
+        }
+
+        return super.getCapability(capability, facing);
     }
 
     @Override
