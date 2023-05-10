@@ -94,7 +94,7 @@ public class TileEntityHeaterHeatex extends TileEntityMachineBase implements IHe
             this.tryConvert();
 
             NBTTagCompound data = new NBTTagCompound();
-            data.setInteger("heat", heatEnergy);
+            data.setInteger("heatEnergy", heatEnergy);
             data.setInteger("toCool", amountToCool);
             data.setInteger("delay", tickDelay);
             data.setTag("tanks", FFUtils.serializeTankArray(tanks));
