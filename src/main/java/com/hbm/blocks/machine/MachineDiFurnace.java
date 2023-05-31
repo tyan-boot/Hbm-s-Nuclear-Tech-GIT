@@ -204,6 +204,10 @@ public class MachineDiFurnace extends BlockContainer {
 	            double d2 = (double)pos.getZ() + 0.5D;
 	            double d4 = rand.nextDouble() * 0.6D - 0.3D;
 
+				if (worldIn.getBlockState(pos.offset(EnumFacing.UP, 1)).getBlock() == ModBlocks.machine_difurnace_ext) {
+					d1 += 1;
+				}
+
 	            if (rand.nextDouble() < 0.1D)
 	            {
 	                worldIn.playSound((double)pos.getX() + 0.5D, (double)pos.getY(), (double)pos.getZ() + 0.5D, SoundEvents.BLOCK_FURNACE_FIRE_CRACKLE, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
