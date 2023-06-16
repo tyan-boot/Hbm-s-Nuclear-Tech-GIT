@@ -561,6 +561,21 @@ public class ItemRenderLibrary {
 				bindTexture(ResourceManager.furnace_steel_tex);  ResourceManager.furnace_steel.renderAll();
 		        GlStateManager.shadeModel(GL11.GL_FLAT);
 			}});
+		renderers.put(Item.getItemFromBlock(ModBlocks.charger), new ItemRenderBase() {
+			public void renderInventory() {
+				GL11.glTranslated(0, -7, 0);
+				GL11.glScaled(10, 10, 10);
+			}
+			public void renderCommon() {
+				GL11.glScaled(2, 2, 2);
+				GL11.glTranslated(0.5, 0, 0);
+				GL11.glShadeModel(GL11.GL_SMOOTH);
+				bindTexture(ResourceManager.charger_tex);
+				ResourceManager.charger.renderPart("Base");
+				ResourceManager.charger.renderPart("Slide");
+				GL11.glShadeModel(GL11.GL_FLAT);
+			}
+		});
 		renderers.put(Item.getItemFromBlock(ModBlocks.tesla), new ItemRenderBase() {
 			public void renderInventory() {
 				GL11.glTranslated(0, -3, 0);

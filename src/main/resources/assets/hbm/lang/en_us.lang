@@ -4664,3 +4664,5 @@ item.ball_fireclay.name=Fireclay
 
 flare.ignition=Ignition
 flare.valve=Flow Valve
+
+tile.charger.name=Charging Station

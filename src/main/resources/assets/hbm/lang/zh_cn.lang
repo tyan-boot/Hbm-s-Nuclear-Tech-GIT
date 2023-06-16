@@ -3193,6 +3193,7 @@ tile.brick_obsidian_slab.name=黑曜石砖台阶
 tile.brick_obsidian_stairs.name=黑曜石砖楼梯
 tile.broadcaster_pc.name=腐败广播
 tile.cable_switch.name=电源开关
+tile.charger.name=充电站
 tile.cheater_virus.name=冻结Ep
 tile.cheater_virus_seed.name=不稳定Ep Schrabide块
 tile.chlorine_gas.name=氯气
